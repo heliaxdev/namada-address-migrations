@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -14,6 +14,17 @@ import (
 	"replace-addrs/namada"
 	"replace-addrs/namada/addrconv"
 )
+
+type addressReplace struct {
+	old []byte
+	new []byte
+}
+
+var replacePool = sync.Pool{
+	New: func() any {
+		return make([]addressReplace, 0, 16)
+	},
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -87,25 +98,42 @@ func findReplace(path string, ent fs.DirEntry) {
 		return
 	}
 
-	f, err := os.Open(path)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: failed to open path: %s: %s\n", path, err)
-		return
-	}
-	defer f.Close()
-
-	buf, err := io.ReadAll(f)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: failed to read file: %s: %s\n", path, err)
 		return
 	}
+
 	if !utf8.Valid(buf) {
 		return
 	}
 
+	occurrences := replacePool.Get().([]addressReplace)
+
 	for _, match := range namada.AddressRegex.FindAll(buf, -1) {
-		utf8Data := *(*string)(unsafe.Pointer(&match))
-		fmt.Println(utf8Data)
+		oldAddress := *(*string)(unsafe.Pointer(&match))
+		newAddress, err := addrconv.ConvertAddress(oldAddress)
+		if err != nil {
+			panic("converting a matched address should not fail")
+		}
+		occurrences = append(occurrences, addressReplace{
+			old: bytes.Clone(match),
+			new: []byte(newAddress),
+		})
+	}
+
+	for i := 0; i < len(occurrences); i++ {
+		occurrence := &occurrences[i]
+		buf = bytes.ReplaceAll(buf, occurrence.old, occurrence.new)
+	}
+
+	occurrences = occurrences[:0]
+	replacePool.Put(occurrences)
+
+	err = os.WriteFile(path, buf, 0644)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to rewrite to file: %s: %s\n", path, err)
+		return
 	}
 }
 
