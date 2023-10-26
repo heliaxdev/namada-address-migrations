@@ -28,6 +28,8 @@ func run() error {
 			return dieUsage()
 		}
 		return convert(os.Args[2])
+	case "r", "replace":
+		return nil
 	}
 
 	return dieUsage()
@@ -58,5 +60,11 @@ func usage(f *os.File) {
 	fmt.Fprintf(f, "\t# convert from the old to the new addr fmt,\n")
 	fmt.Fprintf(f, "\t# printing the new address to stdout\n")
 	fmt.Fprintf(f, "\tc|convert <old-address>\n")
+	fmt.Fprintln(f)
+
+	fmt.Fprintf(f, "\t# replace occurrences of old addresses with\n")
+	fmt.Fprintf(f, "\t# the new address format in all files present\n")
+	fmt.Fprintf(f, "\t# in the given path\n")
+	fmt.Fprintf(f, "\tr|replace <path>\n")
 	fmt.Fprintln(f)
 }
