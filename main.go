@@ -2,7 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"runtime"
+	"sync"
 
 	"replace-addrs/namada"
 )
@@ -29,10 +33,41 @@ func run() error {
 		}
 		return convert(os.Args[2])
 	case "r", "replace":
+		if len(os.Args) != 3 {
+			return dieUsage()
+		}
+		return replace(os.Args[2])
 		return nil
 	}
 
 	return dieUsage()
+}
+
+func replace(rootPath string) error {
+	wg := &sync.WaitGroup{}
+	semaphore := make(chan struct{}, runtime.NumCPU()<<1)
+	runFindReplace(wg, semaphore, rootPath)
+	wg.Wait()
+	return nil
+}
+
+func runFindReplace(wg *sync.WaitGroup, sem chan struct{}, rootPath string) {
+	filepath.WalkDir(rootPath, func(path string, ent fs.DirEntry, err error) error {
+		sem <- struct{}{}
+		wg.Add(1)
+		go func() {
+			defer func() {
+				<-sem
+				wg.Done()
+			}()
+			findReplace(path)
+		}()
+		return nil
+	})
+}
+
+func findReplace(path string) {
+	fmt.Println(path)
 }
 
 func convert(oldAddr string) error {
