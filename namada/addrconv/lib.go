@@ -1,4 +1,4 @@
-package namada
+package addrconv
 
 import (
 	"encoding/hex"

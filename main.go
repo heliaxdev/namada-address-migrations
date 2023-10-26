@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"sync"
 
-	"replace-addrs/namada"
+	"replace-addrs/namada/addrconv"
 )
 
 func main() {
@@ -71,7 +71,7 @@ func findReplace(path string) {
 }
 
 func convert(oldAddr string) error {
-	newAddr, err := namada.ConvertAddress(oldAddr)
+	newAddr, err := addrconv.ConvertAddress(oldAddr)
 	if err != nil {
 		return err
 	}
