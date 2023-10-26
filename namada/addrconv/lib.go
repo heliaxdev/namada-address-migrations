@@ -37,7 +37,33 @@ const (
 	internal_PGF               = "ano::Pgf                                     "
 )
 
-func convertAddressData(data []byte) ([]byte, error) {
+func ConvertAddress(oldAddress string) (string, error) {
+	hrp, data, err := bech32m.DecodeAndConvert(oldAddress)
+	if err != nil {
+		return "", err
+	}
+	switch hrp {
+	case hrpAddressOld:
+		return convertTransparentAddress(data)
+	default:
+		return "", fmt.Errorf("invalid hrp: %s", hrp)
+	}
+}
+
+func convertTransparentAddress(data []byte) (string, error) {
+	newData, err := convertTranspAddressData(data)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert to new addr data format: %w", err)
+	}
+
+	newAddress, err := bech32m.ConvertAndEncode(hrpAddressNew, newData)
+	if err != nil {
+		return "", fmt.Errorf("failed to encode addr data with bech32m: %w", err)
+	}
+	return newAddress, nil
+}
+
+func convertTranspAddressData(data []byte) ([]byte, error) {
 	if !utf8.Valid(data) {
 		return nil, fmt.Errorf("invalid utf8 data")
 	}
@@ -109,26 +135,4 @@ func buildAddress(discriminant byte, data []byte) []byte {
 	// assume input buf is 20 bytes long :x
 	copy(output[1:], data)
 	return output
-}
-
-func ConvertAddress(oldAddress string) (string, error) {
-	hrp, data, err := bech32m.DecodeAndConvert(oldAddress)
-	if err != nil {
-		return "", err
-	}
-	if hrp != hrpAddressOld {
-		return "", fmt.Errorf("invalid hrp: %s", hrp)
-	}
-
-	newData, err := convertAddressData(data)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert to new addr data format: %w", err)
-	}
-
-	newAddress, err := bech32m.ConvertAndEncode(hrpAddressNew, newData)
-	if err != nil {
-		return "", fmt.Errorf("failed to encode addr data with bech32m: %w", err)
-	}
-
-	return newAddress, nil
 }
