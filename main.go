@@ -11,8 +11,8 @@ import (
 	"unicode/utf8"
 	"unsafe"
 
-	"replace-addrs/namada"
-	"replace-addrs/namada/addrconv"
+	"github.com/heliaxdev/namada-address-migrations/namada"
+	"github.com/heliaxdev/namada-address-migrations/namada/addrconv"
 )
 
 type addressReplace struct {

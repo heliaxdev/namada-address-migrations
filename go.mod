@@ -1,4 +1,4 @@
-module replace-addrs
+module github.com/heliaxdev/namada-address-migrations
 
 go 1.21.3
 

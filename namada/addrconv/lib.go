@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 	"unsafe"
 
-	"replace-addrs/bech32m"
+	"github.com/heliaxdev/namada-address-migrations/bech32m"
 )
 
 const (
