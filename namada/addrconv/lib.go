@@ -13,6 +13,16 @@ import (
 const (
 	hrpAddressOld = "atest"
 	hrpAddressNew = "tnam"
+
+	hrpMaspAddressOldUnpinned = "patest"
+	hrpMaspAddressOldPinned   = "ppatest"
+	hrpMaspAddressNew         = "znam"
+
+	hrpSpendingOld = "xsktest"
+	hrpSpendingNew = "znamsecret"
+
+	hrpViewingOld = "xfvktest"
+	hrpViewingNew = "znamview"
 )
 
 const (
@@ -45,9 +55,28 @@ func ConvertAddress(oldAddress string) (string, error) {
 	switch hrp {
 	case hrpAddressOld:
 		return convertTransparentAddress(data)
+	case hrpMaspAddressOldUnpinned:
+		return convertMaspPayment(false, data)
+	case hrpMaspAddressOldPinned:
+		return convertMaspPayment(true, data)
+	case hrpSpendingOld:
+		return encodeAddress(hrpSpendingNew, data)
+	case hrpViewingOld:
+		return encodeAddress(hrpViewingNew, data)
 	default:
 		return "", fmt.Errorf("invalid hrp: %s", hrp)
 	}
+}
+
+func convertMaspPayment(pinned bool, data []byte) (string, error) {
+	newData := make([]byte, 0, 64)
+	if pinned {
+		newData = append(newData, 1)
+	} else {
+		newData = append(newData, 0)
+	}
+	newData = append(newData, data...)
+	return encodeAddress(hrpMaspAddressNew, newData)
 }
 
 func convertTransparentAddress(data []byte) (string, error) {
@@ -55,12 +84,7 @@ func convertTransparentAddress(data []byte) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to convert to new addr data format: %w", err)
 	}
-
-	newAddress, err := bech32m.ConvertAndEncode(hrpAddressNew, newData)
-	if err != nil {
-		return "", fmt.Errorf("failed to encode addr data with bech32m: %w", err)
-	}
-	return newAddress, nil
+	return encodeAddress(hrpAddressNew, newData)
 }
 
 func convertTranspAddressData(data []byte) ([]byte, error) {
@@ -135,4 +159,12 @@ func buildAddress(discriminant byte, data []byte) []byte {
 	// assume input buf is 20 bytes long :x
 	copy(output[1:], data)
 	return output
+}
+
+func encodeAddress(hrp string, data []byte) (string, error) {
+	newAddress, err := bech32m.ConvertAndEncode(hrp, data)
+	if err != nil {
+		return "", fmt.Errorf("failed to encode addr data with bech32m: %w", err)
+	}
+	return newAddress, nil
 }

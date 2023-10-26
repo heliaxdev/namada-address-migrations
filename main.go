@@ -114,7 +114,8 @@ func findReplace(path string, ent fs.DirEntry) {
 		oldAddress := *(*string)(unsafe.Pointer(&match))
 		newAddress, err := addrconv.ConvertAddress(oldAddress)
 		if err != nil {
-			panic("converting a matched address should not fail")
+			fmt.Fprintf(os.Stderr, "error: failed to convert address: %s: %s\n", oldAddress, err)
+			continue
 		}
 		occurrences = append(occurrences, addressReplace{
 			old: bytes.Clone(match),
