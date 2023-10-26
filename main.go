@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
+	"unicode/utf8"
+	"unsafe"
 
+	"replace-addrs/namada"
 	"replace-addrs/namada/addrconv"
 )
 
@@ -60,14 +64,49 @@ func runFindReplace(wg *sync.WaitGroup, sem chan struct{}, rootPath string) {
 				<-sem
 				wg.Done()
 			}()
-			findReplace(path)
+			findReplace(path, ent)
 		}()
 		return nil
 	})
 }
 
-func findReplace(path string) {
-	fmt.Println(path)
+func findReplace(path string, ent fs.DirEntry) {
+	// 1 mib
+	const sizeThreshold = 1 << 20
+
+	if ent.Type()&fs.ModeType != 0 {
+		return
+	}
+
+	info, err := ent.Info()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed read file info: %s: %s\n", path, err)
+		return
+	}
+	if info.Size() >= sizeThreshold {
+		return
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to open path: %s: %s\n", path, err)
+		return
+	}
+	defer f.Close()
+
+	buf, err := io.ReadAll(f)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: failed to read file: %s: %s\n", path, err)
+		return
+	}
+	if !utf8.Valid(buf) {
+		return
+	}
+
+	for _, match := range namada.AddressRegex.FindAll(buf, -1) {
+		utf8Data := *(*string)(unsafe.Pointer(&match))
+		fmt.Println(utf8Data)
+	}
 }
 
 func convert(oldAddr string) error {
