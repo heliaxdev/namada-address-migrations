@@ -1,0 +1,10 @@
+namada-address-migrations
+=========================
+
+tool to help migrate from testnet addresses to live network addresses
+
+usage
+=====
+
+$ go build
+$ ./namada-address-migrations help
