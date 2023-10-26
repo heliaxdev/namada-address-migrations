@@ -20,7 +20,10 @@ func run() error {
 	}
 
 	switch os.Args[1] {
-	case "convert":
+	case "h", "help", "u", "usage":
+		usage(os.Stdout)
+		return nil
+	case "c", "convert":
 		if len(os.Args) != 3 {
 			return dieUsage()
 		}
@@ -45,11 +48,15 @@ func dieUsage() error {
 }
 
 func usage(f *os.File) {
-	fmt.Fprintf(f, "usage: %s\n", os.Args[0])
+	fmt.Fprintf(f, "usage: %s <args>, where <args> =\n", os.Args[0])
+	fmt.Fprintln(f)
+
+	fmt.Fprintf(f, "\t# show this help message\n")
+	fmt.Fprintf(f, "\thelp|usage|h|u\n")
 	fmt.Fprintln(f)
 
 	fmt.Fprintf(f, "\t# convert from the old to the new addr fmt,\n")
 	fmt.Fprintf(f, "\t# printing the new address to stdout\n")
-	fmt.Fprintf(f, "\tconvert <old-address>\n")
+	fmt.Fprintf(f, "\tc|convert <old-address>\n")
 	fmt.Fprintln(f)
 }
