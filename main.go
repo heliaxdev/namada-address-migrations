@@ -52,7 +52,6 @@ func run() error {
 			return dieUsage()
 		}
 		return replace(os.Args[2])
-		return nil
 	}
 
 	return dieUsage()
