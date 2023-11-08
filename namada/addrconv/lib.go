@@ -19,10 +19,19 @@ const (
 	hrpMaspAddressNew         = "znam"
 
 	hrpSpendingOld = "xsktest"
-	hrpSpendingNew = "znamsecret"
+	hrpSpendingNew = "zsknam"
 
 	hrpViewingOld = "xfvktest"
-	hrpViewingNew = "znamview"
+	hrpViewingNew = "zvknam"
+
+	hrpPubkeyOld = "pktest"
+	hrpPubkeyNew = "tpknam"
+
+	hrpDkgOld = "dpktest"
+	hrpDkgNew = "dpknam"
+
+	hrpSigOld = "sigtest"
+	hrpSigNew = "signam"
 )
 
 const (
@@ -63,6 +72,12 @@ func ConvertAddress(oldAddress string) (string, error) {
 		return encodeAddress(hrpSpendingNew, data)
 	case hrpViewingOld:
 		return encodeAddress(hrpViewingNew, data)
+	case hrpPubkeyOld:
+		return encodeAddress(hrpPubkeyNew, data)
+	case hrpDkgOld:
+		return encodeAddress(hrpDkgNew, data)
+	case hrpSigOld:
+		return encodeAddress(hrpSigNew, data)
 	default:
 		return "", fmt.Errorf("invalid hrp: %s", hrp)
 	}
