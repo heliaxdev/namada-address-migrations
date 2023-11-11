@@ -52,6 +52,11 @@ func run() error {
 			return dieUsage()
 		}
 		return replace(os.Args[2])
+	case "i", "implicit-address":
+		if len(os.Args) != 3 {
+			return dieUsage()
+		}
+		return implicitAddress(os.Args[2])
 	}
 
 	return dieUsage()
@@ -146,6 +151,15 @@ func convert(oldAddr string) error {
 	return nil
 }
 
+func implicitAddress(bech32PublicKey string) error {
+	addr, err := addrconv.PublicKeyToImplicit(bech32PublicKey)
+	if err != nil {
+		return err
+	}
+	fmt.Println(addr)
+	return nil
+}
+
 func dieUsage() error {
 	usage(os.Stderr)
 	return fmt.Errorf("invalid cli arguments detected")
@@ -162,6 +176,10 @@ func usage(f *os.File) {
 	fmt.Fprintf(f, "\t# convert from the old to the new addr fmt,\n")
 	fmt.Fprintf(f, "\t# printing the new address to stdout\n")
 	fmt.Fprintf(f, "\tc|convert <old-address>\n")
+	fmt.Fprintln(f)
+
+	fmt.Fprintf(f, "\t# get an implicit address from a public key\n")
+	fmt.Fprintf(f, "\ti|implicit-address <bech32-encoded-pk>\n")
 	fmt.Fprintln(f)
 
 	fmt.Fprintf(f, "\t# replace occurrences of old addresses with\n")

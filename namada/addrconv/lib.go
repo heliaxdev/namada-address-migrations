@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+	"crypto/sha256"
 	"unsafe"
 
 	"github.com/heliaxdev/namada-address-migrations/bech32m"
@@ -55,6 +56,21 @@ const (
 	internal_MULTITOKEN        = "ano::Multitoken                              "
 	internal_PGF               = "ano::Pgf                                     "
 )
+
+func PublicKeyToImplicit(publicKey string) (string, error) {
+	hrp, pubKeyData, err := bech32m.DecodeAndConvert(publicKey)
+	if err != nil {
+		return "", err
+	}
+	if hrp != hrpPubkeyNew {
+		return "", fmt.Errorf("invalid pk hrp: %s", hrp)
+	}
+
+	pkHash := sha256.Sum256(pubKeyData)
+	rawAddress := buildAddress(0, pkHash[:20])
+
+	return encodeAddress(hrpAddressNew, rawAddress)
+}
 
 func ConvertAddress(oldAddress string) (string, error) {
 	hrp, data, err := bech32m.DecodeAndConvert(oldAddress)
